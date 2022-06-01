@@ -1,0 +1,33 @@
+Death:
+  messages:
+    content:
+      - "&7Bạn đã chết và mất {0} tiền"
+      - "&7Ôi không bạn đã bị trộm mất {0}"
+  title:
+    title: "&cBạn đã chết"
+    sub-title: "&7và mất {0}"
+  actionbar:
+    content: "&cBạn đã chết và mất {0}"
+
+Heart:
+  alert:
+    title: "&cCảnh báo bạn sắp chết"
+    sub-title: "&cVà sẽ mất&a{0}&c tiền"
+
+Gui:
+  common:
+    edit: "Click to view & Edit"
+    enable: "Click to Enable"
+    disable: "Click to Disable"
+    reload: "Click to Reload"
+  main:
+    title: "Settings Menu"
+    messages-description: "This will give you a ability to configurate you messages"
+  messages:
+    title: "Messages Menu"
+    enabled:
+      title: "&aMessage Enabled"
+      description: "&7Set if messages is enabled."
+    messages:
+      title: "Messages"
+      description: "&7Configurate all the messages"
