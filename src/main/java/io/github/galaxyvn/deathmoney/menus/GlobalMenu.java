@@ -1,0 +1,191 @@
+package io.github.galaxyvn.deathmoney.menus;
+
+import io.github.galaxyvn.deathmoney.PluginData;
+import io.github.galaxyvn.deathmoney.config.Configurable;
+import io.github.galaxyvn.deathmoney.core.item.ItemBuilder;
+import io.github.galaxyvn.deathmoney.libary.xseries.XMaterial;
+import org.bukkit.Bukkit;
+import org.bukkit.Sound;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+
+import java.util.*;
+
+public abstract class GlobalMenu implements Configurable {
+
+    static final ItemStack BACK_ICON = new ItemBuilder(XMaterial.ARROW.parseMaterial())
+            .setName("&c ⬅ Back").build();
+
+    private final int slots;
+    private final String ID;
+    private Inventory inventory;
+    private final Set<Button> BUTTONS = new HashSet<>();
+
+    /**
+     * Creates a new global menu instance.
+     *
+     * @param id   id for this menu.
+     * @param rows how many rows the inventory should have.
+     */
+    public GlobalMenu(Menus id, int rows) {
+        this(id.getId(), rows);
+    }
+
+    /**
+     * Creates a new global menu instance.
+     *
+     * @param id   id for this menu.
+     * @param rows how many rows the inventory should have.
+     */
+    public GlobalMenu(String id, int rows) {
+        this.ID = id;
+        this.slots = rows * 9;
+    }
+
+    @Override
+    public void updateConfig(ConfigurationSection section) {
+        build();
+    }
+
+    public final String getID() {
+        return ID;
+    }
+
+    public Inventory getInventory() {
+        return inventory;
+    }
+
+    public final void setButton(Button button) {
+        this.BUTTONS.add(button.setMenu(this));
+        button.update();
+    }
+
+    public final void clearSlot(int x, int y) {
+        inventory.setItem(x * 9 + y, null);
+    }
+
+    public final void addBackButton(MenuManager manager, Menus id) {
+        addBackButton(manager, id.getId());
+    }
+
+    public final void addBackButton(MenuManager manager, String id) {
+        setButton(new Button(0, BACK_ICON).onClick(player -> {
+            manager.getMenu(id).open(player);
+        }));
+    }
+
+    public final void openMenu(MenuManager manager, Menus id, Player player) {
+        openMenu(manager, id.getId(), player);
+    }
+
+    public final void openMenu(MenuManager manager, String id, Player player) {
+        GlobalMenu menu = manager.getMenu(id);
+        if (menu != null)
+            menu.open(player);
+    }
+
+    /**
+     * Rebuilds the menu. This will force anyone who has this menu open to
+     * close it.
+     */
+    public final void rebuild() {
+        forceClose();
+        makeInventory();
+        build();
+    }
+
+    private void makeInventory() {
+        String title = getTitle();
+        if (title == null) title = "";
+        this.inventory = Bukkit.createInventory(null, slots, title);
+    }
+
+    /**
+     * @return the inventory title.
+     */
+    public abstract String getTitle();
+
+    /**
+     * Builds theinventory menu.
+     */
+    public abstract void build();
+
+    public void onOpen(Player who) {}
+
+    /**
+     * Makes the player open the menu.
+     *
+     * @param player player who will open the menu.
+     */
+    public void open(Player player) {
+        if (inventory == null) rebuild();
+        player.openInventory(inventory);
+        player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1, 1);
+        onOpen(player);
+    }
+
+    /**
+     * Called when a slot of the inventory is clicked.
+     *
+     * @param slot slot clicked.
+     * @param player player who clicked the slot.
+     * @param clickType type of click the player preformed.
+     */
+    public void onClick(int slot, Player player, ClickType clickType) {}
+
+    /**
+     * Processes a click on this inventory. This will also trigger the onClick event
+     * and call for a click on any buttons that were added to the menu.
+     *
+     * @param slot slot that was clicked.
+     * @param player player who clicked the slot.
+     * @param clickType type of click the player preformed.
+     */
+    final void processClick(int slot, Player player, ClickType clickType) {
+        if (inventory == null) return;
+        onClick(slot, player, clickType);
+        BUTTONS.forEach(b -> b.click(player, this, slot));
+    }
+
+    /**
+     * Converts a row and column into an inventory slot.
+     *
+     * @param row row to get.
+     * @param column column to get.
+     * @return slot where row and column intersect.
+     */
+    public final int asSlot(int row, int column) {
+        return (row * 9) + column;
+    }
+
+    /**
+     * Forcibly closes the menu for anyone who has it open.
+     */
+    public final void forceClose() {
+        if (inventory == null) return;
+        if (inventory.getViewers().size() == 0) return;
+        List<HumanEntity> viewers = new ArrayList<>(inventory.getViewers());
+        for (HumanEntity player : viewers)
+            player.closeInventory();
+    }
+
+    /**
+     * Returns if a inventory is similar or the same to this inventory. Note there is a
+     * very small chance this can cause a false positive.
+     *
+     * @param inv inventory to compare to.
+     * @return if the inventory is similar or the same.
+     */
+    final boolean isInventorySimilar(Inventory inv) {
+        if (inv == null || inventory == null) return false;
+        if (inv == inventory) return true;
+        if (inv.getType() != inventory.getType()) return false;
+        if (inv.getSize() != inventory.getSize()) return false;
+        if (!Arrays.equals(inventory.getContents(), inv.getContents())) return false;
+        return true;
+    }
+}

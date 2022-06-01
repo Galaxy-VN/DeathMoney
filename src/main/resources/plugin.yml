@@ -1,0 +1,18 @@
+name: DeathMoney
+version: '${version}'
+author: GalaxyVN
+depend:
+  - Vault
+softdepend:
+  - CMI
+  - BetterEconomy
+  - Essentials
+main: io.github.galaxyvn.deathmoney.DeathMoney
+api-version: 1.13
+
+commands:
+  deathmoney:
+    aliases:
+      - dm
+    permission: deathmoney.admin
+    permission-message: You don't have permission to do this.
